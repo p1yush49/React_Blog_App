@@ -37,13 +37,24 @@ pipeline {
             }
         }
 
-        stage('Deploy to K3s') {
+        stage('Import to K3s') {
             steps {
                 sh """
                     docker save ${IMAGE_TAG} -o /tmp/${APP_NAME}.tar
-                    sudo k3s ctr images import /tmp/${APP_NAME}.tar
-                    rm /tmp/${APP_NAME}.tar
-                    kubectl set image deployment/${APP_NAME} ${APP_NAME}=${IMAGE_TAG} -n react-apps || echo 'Deployment not found, will create via Terraform'
+                    k3s ctr images import /tmp/${APP_NAME}.tar
+                    rm -f /tmp/${APP_NAME}.tar
+                """
+            }
+        }
+
+        stage('Deploy to K3s') {
+            steps {
+                sh """
+                    kubectl create namespace react-apps --dry-run=client -o yaml | kubectl apply -f -
+                    kubectl get deployment ${APP_NAME} -n react-apps && \
+                    kubectl set image deployment/${APP_NAME} ${APP_NAME}=${IMAGE_TAG} -n react-apps || \
+                    kubectl create deployment ${APP_NAME} --image=${IMAGE_TAG} -n react-apps
+                    kubectl expose deployment ${APP_NAME} --port=80 --target-port=80 -n react-apps --dry-run=client -o yaml | kubectl apply -f -
                 """
             }
         }
