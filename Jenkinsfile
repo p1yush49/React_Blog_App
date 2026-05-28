@@ -14,7 +14,7 @@ pipeline {
         stage('Checkout') {
             steps {
                 git branch: 'main',
-                    url: 'https://github.com/p1yush49/React_Blog_App.git',
+                    url: 'https://github.com/YOUR_GITHUB_USERNAME/React_Blog_App.git',
                     credentialsId: 'github-creds'
             }
         }
@@ -40,9 +40,7 @@ pipeline {
         stage('Import to K3s') {
             steps {
                 sh """
-                    docker save ${IMAGE_TAG} -o /tmp/${APP_NAME}.tar
-                    k3s ctr images import /tmp/${APP_NAME}.tar
-                    rm -f /tmp/${APP_NAME}.tar
+                    docker save ${IMAGE_TAG} | sudo k3s ctr images import -
                 """
             }
         }
@@ -50,11 +48,11 @@ pipeline {
         stage('Deploy to K3s') {
             steps {
                 sh """
-                    kubectl create namespace react-apps --dry-run=client -o yaml | kubectl apply -f -
-                    kubectl get deployment ${APP_NAME} -n react-apps && \
-                    kubectl set image deployment/${APP_NAME} ${APP_NAME}=${IMAGE_TAG} -n react-apps || \
-                    kubectl create deployment ${APP_NAME} --image=${IMAGE_TAG} -n react-apps
-                    kubectl expose deployment ${APP_NAME} --port=80 --target-port=80 -n react-apps --dry-run=client -o yaml | kubectl apply -f -
+                    sudo kubectl create namespace react-apps --dry-run=client -o yaml | sudo kubectl apply -f -
+                    sudo kubectl get deployment ${APP_NAME} -n react-apps 2>/dev/null && \
+                    sudo kubectl set image deployment/${APP_NAME} ${APP_NAME}=${IMAGE_TAG} -n react-apps || \
+                    sudo kubectl create deployment ${APP_NAME} --image=${IMAGE_TAG} -n react-apps
+                    sudo kubectl expose deployment ${APP_NAME} --port=80 --target-port=80 -n react-apps --dry-run=client -o yaml | sudo kubectl apply -f -
                 """
             }
         }
