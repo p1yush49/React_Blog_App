@@ -14,7 +14,7 @@ pipeline {
         stage('Checkout') {
             steps {
                 git branch: 'main',
-                    url: 'https://github.com/YOUR_GITHUB_USERNAME/React_Blog_App.git',
+                    url: 'https://github.com/p1yush49/React_Blog_App.git',
                     credentialsId: 'github-creds'
             }
         }
