@@ -57,6 +57,15 @@ pipeline {
                 """
             }
         }
+
+        stage('Cleanup') {
+            steps {
+                sh """
+                    docker image prune -f
+                    docker images ${APP_NAME} --format '{{.Tag}}' | sort -rn | tail -n +4 | xargs -r -I {} docker rmi ${APP_NAME}:{} || true
+                """
+            }
+        }
     }
 
     post {
